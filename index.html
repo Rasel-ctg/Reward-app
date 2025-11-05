@@ -154,7 +154,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { 
   getAuth, onAuthStateChanged, signInAnonymously, updateProfile,
-  GoogleAuthProvider, signInWithPopup
+  GoogleAuthProvider, signInWithRedirect, getRedirectResult
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, writeBatch, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -289,10 +289,7 @@
             document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); window.navigateTo(link.dataset.page); }));
         }
 
-      import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-// Google login redirect
+      // ✅ Google Login (Redirect Version)
 const provider = new GoogleAuthProvider();
 
 document.getElementById('google-login-btn').addEventListener('click', () => {
@@ -300,7 +297,6 @@ document.getElementById('google-login-btn').addEventListener('click', () => {
   signInWithRedirect(auth, provider);
 });
 
-// redirect এর পর user ধরার অংশ
 getRedirectResult(auth)
   .then(async (result) => {
     if (result && result.user) {
@@ -332,7 +328,7 @@ getRedirectResult(auth)
     }
   })
   .catch((error) => {
-    console.error(error);
+    console.error("Google login failed:", error);
     showAlert("Google login failed. Please try again.");
   })
   .finally(() => {
