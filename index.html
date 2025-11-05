@@ -172,7 +172,7 @@
         window.onload = () => {
             lucide.createIcons();
             setupEventListeners();
-            onAuthStateChanged(auth, handleAuthStateChange);
+             handleAuthStateChange);
         };
 
         // --- HELPER FUNCTIONS ---
@@ -289,17 +289,31 @@
             document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); window.navigateTo(link.dataset.page); }));
         }
 
-      // ✅ Google Login (Redirect Version)
+      // --- Google login (robust redirect flow with debugging) ---
 const provider = new GoogleAuthProvider();
 
+// Click handler: kick off redirect
 document.getElementById('google-login-btn').addEventListener('click', () => {
-  loader.style.display = 'flex';
-  signInWithRedirect(auth, provider);
+  try {
+    loader.style.display = 'flex';
+    console.log("[Auth] Starting signInWithRedirect...");
+    signInWithRedirect(auth, provider);
+    // note: after this call the browser will navigate to Google
+  } catch (err) {
+    console.error("[Auth] signInWithRedirect error:", err);
+    showAlert("Could not start Google Sign-In. Please try again.");
+    loader.style.display = 'none';
+  }
 });
 
-getRedirectResult(auth)
-  .then(async (result) => {
+// Immediately check for redirect result as soon as script runs (non-blocking)
+(async function checkRedirectResult() {
+  console.log("[Auth] Checking getRedirectResult...");
+  try {
+    const result = await getRedirectResult(auth);
+    console.log("[Auth] getRedirectResult returned:", result);
     if (result && result.user) {
+      // Got user from redirect — create user doc if needed and initialise app
       const user = result.user;
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
@@ -325,15 +339,17 @@ getRedirectResult(auth)
       currentUser = user;
       await fetchUserData();
       await initializeAppAfterLogin();
+    } else {
+      console.log("[Auth] No redirect result (normal if user didn't come from Google redirect).");
     }
-  })
-  .catch((error) => {
-    console.error("Google login failed:", error);
-    showAlert("Google login failed. Please try again.");
-  })
-  .finally(() => {
+  } catch (error) {
+    console.error("[Auth] getRedirectResult error:", error);
+    // show concise user message but keep loader hidden
+    showAlert("Google login failed (redirect). Please check console for details.");
+  } finally {
     loader.style.display = 'none';
-  });
+  }
+})();
 
         
         function populateAllPages() {
